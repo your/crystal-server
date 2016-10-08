@@ -6,7 +6,7 @@ CONTENT_TYPES = {
   "html" => "text/html",
   "js" => "text/javascript",
   "css" => "text/css"
-} # Just to begin with.
+}
 
 class Server
   def self.run
@@ -22,7 +22,7 @@ class Server
     # (Fibers! :D)
     #
     server = HTTP::Server.new(@port) do |context|
-      path = context.request.path
+      path = translate_path(context.request.path)
 
       if valid_path?(path)
         reply_with(raw_file(path), context, path)
@@ -35,6 +35,25 @@ class Server
 
     puts "Crystal server listening on http://0.0.0.0:#{@port}"
     server.listen
+  end
+
+  # Conversion matrix:
+  #
+  # GET /compiled-html-filename-without-extension -> /raw/html/filename-without-extension
+  # GET /filename.js -> /raw/js/filename-without-extension
+  # GET /filename.css -> /raw/css/filename-without-extension
+  #
+  def translate_path(path)
+    return path unless !!/^\/[0-9a-zA-Z-]+(.js|.css)?$/.match(path)
+
+    case path
+    when /.js/
+      "/raw/js" + path.gsub(".js", "")
+    when /.css/
+      "/raw/css" + path.gsub(".css", "")
+    else
+      "/raw/html" + path
+    end
   end
 
   # Allowing smth like:

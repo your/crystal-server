@@ -1,5 +1,7 @@
+BASE_DIR = "."
+
 class Store
-  def initialize(@base_dir = "./store")
+  def initialize(@base_dir = "#{BASE_DIR}/compiled")
     @resources = {} of String => String
   end
 
