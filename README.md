@@ -23,14 +23,14 @@ Yes, it can handle concurrent requests.
 The following conversion matrix is now available to access resources using a shorter URL:
 
 ```
-  GET /compiled-html-filename-without-extension -> /raw/html/filename-without-extension
+  GET /html-filename-without-extension -> /raw/html/html-filename-without-extension
   GET /filename.js -> /raw/js/filename-without-extension
   GET /filename.css -> /raw/css/filename-without-extension
 ```
 
 ## Test
 
-Run `crystal server.cr` and go to [http://localhost:8081/raw/html/test](http://localhost:8081/raw/html/test)
+Run `crystal server.cr` and go to [http://localhost:8081/raw/html/test](http://localhost:8081/raw/html/test) (or [http://localhost:8081/test](http://localhost:8081/test))
 
 ## TODO
 
