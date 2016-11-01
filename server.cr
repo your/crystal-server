@@ -43,15 +43,15 @@ class Server
   # GET /filename.css -> /raw/css/filename-without-extension
   #
   def translate_path(path)
-    return path unless !!/^\/[0-9a-zA-Z-]+(.js|.css)?$/.match(path)
+    return path unless !!/^\/[0-9a-zA-Z-]+(.js|.css|.[0-9a-zA-Z]+)?$/.match(path)
 
     case path
-    when /.js/
+    when /.js$/
       "/raw/js" + path.gsub(/.js$/, "")
     when /.css$/
       "/raw/css" + path.gsub(/.css$/, "")
     else
-      if !/^\/[0-9a-zA-Z-]+.[0-9a-zA-Z]+$/.match(path)
+      if path.includes?(".")
         "/raw/bin" + path
       else
         "/raw/html" + path
@@ -67,7 +67,7 @@ class Server
   # GET /raw/bin/filename-with-extension
   #
   def valid_path?(path)
-    !!/^\/raw\/(html|js|css)\/[0-9a-zA-Z-]+$/.match(path) ||
+    !!/^\/raw\/(html|js|css|bin)\/[0-9a-zA-Z-]+$/.match(path) ||
       !!/^\/raw\/bin\/[0-9a-zA-Z-]+.[0-9a-zA-Z-]+$/.match(path)
   end
 
