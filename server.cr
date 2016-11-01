@@ -5,7 +5,8 @@ PORT = 8081
 CONTENT_TYPES = {
   "html" => "text/html",
   "js" => "text/javascript",
-  "css" => "text/css"
+  "css" => "text/css",
+  "bin" => "octet/stream"
 }
 
 class Server
@@ -25,11 +26,9 @@ class Server
       path = translate_path(context.request.path)
 
       if valid_path?(path)
-        reply_with(raw_file(path), context, path)
-      elsif favicon?(path)
-        reply_with(:favicon, context, path)
+        reply_with_resource(raw_file(path), context, path)
       else
-        reply_with(:nothing, context, path)
+        reply_with_nothing(context)
       end
     end
 
@@ -44,15 +43,19 @@ class Server
   # GET /filename.css -> /raw/css/filename-without-extension
   #
   def translate_path(path)
-    return path unless !!/^\/[0-9a-zA-Z-]+(.js|.css)?$/.match(path)
+    return path unless !!/^\/[0-9a-zA-Z-]+(.js|.css|.[0-9a-zA-Z]+)?$/.match(path)
 
     case path
-    when /.js/
-      "/raw/js" + path.gsub(".js", "")
-    when /.css/
-      "/raw/css" + path.gsub(".css", "")
+    when /.js$/
+      "/raw/js" + path.gsub(/.js$/, "")
+    when /.css$/
+      "/raw/css" + path.gsub(/.css$/, "")
     else
-      "/raw/html" + path
+      if path.includes?(".")
+        "/raw/bin" + path
+      else
+        "/raw/html" + path
+      end
     end
   end
 
@@ -61,47 +64,32 @@ class Server
   # GET /raw/html/filename-without-extension
   # GET /raw/js/filename-without-extension
   # GET /raw/css/filename-without-extension
+  # GET /raw/bin/filename-with-extension
   #
   def valid_path?(path)
-    !!/^\/raw\/(html|js|css)\/[0-9a-zA-Z-]+$/.match(path)
+    !!/^\/raw\/(html|js|css|bin)\/[0-9a-zA-Z-]+$/.match(path) ||
+      !!/^\/raw\/bin\/[0-9a-zA-Z-]+.[0-9a-zA-Z-]+$/.match(path)
   end
 
   def raw_file(path)
     @store.resource(path)
   end
 
-  def favicon?(path)
-    path.ends_with?("favicon.ico")
+  def reply_with_nothing(context)
+    context.response.status_code = 403
+    context.response.content_type = "text/plain"
+    context.response.print("Forbidden")
   end
 
-  def reply_with(resource, context, path)
-    case resource
-    when :nothing
-      context.response.status_code = 403
-      context.response.content_type = "text/plain"
-      context.response.print("Forbidden")
-    when :favicon
+  def reply_with_resource(resource, context, path)
+    if resource && resource.size > 0
       context.response.status_code = 200
-      context.response.content_type = "image/x-icon"
-
-      # Slice this!
-      size = File.size("./favicon.ico") rescue 0
-      slice = Slice(UInt8).new(size)
-      File.open("./favicon.ico") do |file|
-        file.read_fully(slice)
-      end rescue nil # (meh.)
-
-      context.response.write(slice)
+      context.response.content_type = CONTENT_TYPES[extension(path)]
+      context.response.write(resource)
     else
-      if resource
-        context.response.status_code = 200
-        context.response.content_type = CONTENT_TYPES[extension(path)]
-        context.response.print(resource)
-      else
-        context.response.status_code = 404
-        context.response.content_type = "text/plain"
-        context.response.print("Not found")
-      end
+      context.response.status_code = 404
+      context.response.content_type = "text/plain"
+      context.response.print("Not found")
     end
   end
 
