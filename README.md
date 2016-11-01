@@ -10,9 +10,10 @@ This server allows GET requests in the following format:
   GET /raw/html/filename-without-extension
   GET /raw/js/filename-without-extension
   GET /raw/css/filename-without-extension
+  GET /raw/bin/filename-with-extension
 ```
 
-Files have to be stored under the `store/raw` subfolders `(html|js|css)` with their own extension, but they must be requested without expliciting it.
+Files must be stored under the `store/raw` subfolders `(html|js|css|bin)` with their own extension, but they can be requested without expliciting it as long as they are not *binary* files (in this case, always add the extension). (Also, see: URL shorcuts)
 
 Yes, it can handle concurrent requests.
 
@@ -24,6 +25,7 @@ The following conversion matrix is now available to access resources using a sho
   GET /html-filename-without-extension -> /raw/html/html-filename-without-extension
   GET /filename.js -> /raw/js/filename-without-extension
   GET /filename.css -> /raw/css/filename-without-extension
+  GET /filename.jpg -> /raw/bin/filename-with-extension
 ```
 
 ## Cache
