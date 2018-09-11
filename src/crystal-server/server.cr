@@ -1,6 +1,7 @@
 require "http/server"
 require "./store"
 
+HOST = "0.0.0.0"
 PORT = 8081
 CONTENT_TYPES = {
   "html" => "text/html",
@@ -13,7 +14,7 @@ class Server
     new.init
   end
 
-  def initialize(@port = PORT, @store = Store.new)
+  def initialize(@host = HOST, @port = PORT, @store = Store.new)
     Signal::HUP.trap do
       print "Cleaning cache.. "
       @store.clean!
@@ -22,11 +23,7 @@ class Server
   end
 
   def init
-    #
-    # https://github.com/crystal-lang/crystal/blob/master/src/http/server.cr#L148
-    # (Fibers! :D)
-    #
-    server = HTTP::Server.new(@port) do |context|
+    server = HTTP::Server.new do |context|
       path = translate_path(context.request.path)
 
       if valid_path?(path)
@@ -38,7 +35,8 @@ class Server
       end
     end
 
-    puts "Crystal server listening on http://0.0.0.0:#{@port}"
+    address = server.bind_tcp(@host, @port)
+    puts "Crystal server listening on http://#{@host}:#{@port}"
     server.listen
   end
 
