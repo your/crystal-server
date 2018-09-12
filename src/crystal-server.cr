@@ -1,3 +1,3 @@
 require "./crystal-server/server"
 
-Server.run
+CrystalServer::Server.run
